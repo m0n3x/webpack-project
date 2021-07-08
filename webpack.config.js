@@ -2,6 +2,8 @@ const path = require("path")
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const ImageMinimizerPlugin = require("image-minimizer-webpack-plugin");
+
 
 let mode = "development";
 
@@ -13,12 +15,23 @@ module.exports = {
 
   output: {
     path: path.resolve(__dirname, "dist"),
+    assetModuleFilename: "images/[hash][ext][query]",
   },
   module: {
     rules: [
+        {
+          test: /\.(png|jpg|gif|svg)$/i,
+          type: "asset",
+        },
       {
         test: /\.s?css$/i,
-        use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"]
+        use: [
+          {
+            loader: MiniCssExtractPlugin.loader, 
+            options: { publicPath: "" },
+          },
+          "css-loader", 
+          "sass-loader"]
       },
       {
         test: /\.js$/,
@@ -31,11 +44,25 @@ module.exports = {
   },
 
   plugins: [
-    new CleanWebpackPlugin(),
+    
+    new ImageMinimizerPlugin({
+      minimizerOptions: {
+        // Lossless optimization with custom option
+        // Feel free to experiment with options for better result for you
+        plugins: [
+          ["gifsicle", { interlaced: true }],
+          ["jpegtran", { progressive: true }],
+          ["optipng", { optimizationLevel: 5 }]
+        ]}
+      }),
+    //new CleanWebpackPlugin(),
     new MiniCssExtractPlugin(), 
     new HtmlWebpackPlugin({
     template: "./src/index.html"
-  })], 
+  }),
+ 
+  
+], 
 
   devtool: "source-map",
   devServer: {
